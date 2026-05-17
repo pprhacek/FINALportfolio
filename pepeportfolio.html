@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PPRHACEK — GRAFIK</>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --black: #000000;
+      --white: #f0ede8;
+      --gray: #1a1a1a;
+      --border: 2px solid #f0ede8;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--black);
+      color: var(--white);
+      font-family: 'Space Mono', monospace;
+      cursor: crosshair;
+      overflow-x: hidden;
+    }
+
+    /* ── NOISE OVERLAY ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 9999;
+      opacity: 0.35;
+    }
+
+    /* ── LOADER ── */
+    #loader {
+      position: fixed;
+      inset: 0;
+      background: var(--black);
+      z-index: 9998;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.6s ease 0.3s;
+    }
+    #loader.hidden { opacity: 0; pointer-events: none; }
+    .loader-text {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(4rem, 12vw, 10rem);
+      letter-spacing: 0.1em;
+      animation: flicker 0.08s infinite alternate;
+    }
+    @keyframes flicker {
+      from { opacity: 1; }
+      to   { opacity: 0.85; }
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.2rem 2.5rem;
+      border-bottom: var(--border);
+      background: var(--black);
+      mix-blend-mode: normal;
+    }
+    .nav-logo {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.4rem;
+      letter-spacing: 0.2em;
+      text-decoration: none;
+      color: var(--white);
+    }
+    .nav-links { display: flex; gap: 2rem; list-style: none; }
+    .nav-links a {
+      color: var(--white);
+      text-decoration: none;
+      font-size: 0.72rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      position: relative;
+      padding-bottom: 2px;
+    }
+    .nav-links a::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0;
+      width: 0; height: 1px;
+      background: var(--white);
+      transition: width 0.3s ease;
+    }
+    .nav-links a:hover::after { width: 100%; }
+
+    /* ── HERO ── */
+    #hero {
+      min-height: 100vh;
+      display: grid;
+      grid-template-rows: 1fr auto;
+      padding: 0 2.5rem;
+      padding-top: 5rem;
+      border-bottom: var(--border);
+      position: relative;
+      overflow: hidden;
+    }
+    .hero-main {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .hero-eyebrow {
+      font-size: 0.72rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      opacity: 0.5;
+      margin-bottom: 1rem;
+      animation: fadeUp 0.8s ease 0.8s both;
+    }
+    h1 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(5rem, 18vw, 18rem);
+      line-height: 0.88;
+      letter-spacing: -0.01em;
+      animation: fadeUp 0.8s ease 1s both;
+    }
+    h1 .outline {
+      -webkit-text-stroke: 2px var(--white);
+      color: transparent;
+    }
+    .hero-sub {
+      margin-top: 2.5rem;
+      font-size: 0.8rem;
+      letter-spacing: 0.1em;
+      opacity: 0.6;
+      max-width: 36ch;
+      line-height: 1.8;
+      animation: fadeUp 0.8s ease 1.2s both;
+    }
+    .hero-bottom {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      padding: 2rem 0;
+      border-top: var(--border);
+    }
+    .hero-available {
+      font-size: 0.68rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+    .dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--white);
+      animation: pulse 2s ease infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%       { opacity: 0.3; transform: scale(0.6); }
+    }
+    .scroll-hint {
+      font-size: 0.68rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      opacity: 0.4;
+      animation: bounce 2s ease infinite;
+    }
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50%       { transform: translateY(6px); }
+    }
+    .hero-number {
+      position: absolute;
+      right: 2.5rem;
+      top: 50%;
+      transform: translateY(-50%);
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(12rem, 30vw, 28rem);
+      color: transparent;
+      -webkit-text-stroke: 1px rgba(240,237,232,0.06);
+      pointer-events: none;
+      line-height: 1;
+      user-select: none;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── MARQUEE ── */
+    .marquee-wrap {
+      overflow: hidden;
+      border-bottom: var(--border);
+      padding: 0.8rem 0;
+      background: var(--white);
+    }
+    .marquee-track {
+      display: flex;
+      gap: 3rem;
+      animation: marquee 18s linear infinite;
+      width: max-content;
+    }
+    .marquee-track span {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.1rem;
+      letter-spacing: 0.2em;
+      color: var(--black);
+      white-space: nowrap;
+    }
+    @keyframes marquee {
+      from { transform: translateX(0); }
+      to   { transform: translateX(-50%); }
+    }
+
+    /* ── ABOUT ── */
+    #about {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      border-bottom: var(--border);
+    }
+    .about-left {
+      padding: 5rem 2.5rem;
+      border-right: var(--border);
+    }
+    .about-right {
+      padding: 5rem 2.5rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .section-label {
+      font-size: 0.65rem;
+      letter-spacing: 0.35em;
+      text-transform: uppercase;
+      opacity: 0.4;
+      margin-bottom: 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .section-label::before {
+      content: '';
+      display: block;
+      width: 2rem;
+      height: 1px;
+      background: currentColor;
+    }
+    h2 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(3rem, 6vw, 5.5rem);
+      line-height: 0.95;
+      letter-spacing: 0.01em;
+      margin-bottom: 2rem;
+    }
+    .about-text {
+      font-size: 0.82rem;
+      line-height: 2;
+      opacity: 0.7;
+      margin-bottom: 2.5rem;
+    }
+    .skills-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.5rem;
+    }
+    .skill-tag {
+      font-size: 0.68rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 0.5rem 0.8rem;
+      border: 1px solid rgba(240,237,232,0.2);
+      transition: all 0.2s ease;
+    }
+    .skill-tag:hover {
+      border-color: var(--white);
+      background: var(--white);
+      color: var(--black);
+    }
+    .stats-row {
+      display: flex;
+      gap: 3rem;
+    }
+    .stat-num {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 4rem;
+      line-height: 1;
+      display: block;
+    }
+    .stat-label {
+      font-size: 0.65rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      opacity: 0.4;
+    }
+
+    /* ── WORK ── */
+    #work { border-bottom: var(--border); }
+    .work-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      padding: 3rem 2.5rem 2rem;
+      border-bottom: var(--border);
+    }
+    .work-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+    }
+    .project-card {
+      border-right: var(--border);
+      border-bottom: var(--border);
+      padding: 2rem;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      min-height: 340px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: background 0.3s ease;
+    }
+    .project-card:nth-child(3n) { border-right: none; }
+    .project-card:hover { background: var(--white); color: var(--black); }
+    .project-card:hover .project-tag { border-color: var(--black); color: var(--black); }
+    .project-card:hover .project-arrow { opacity: 1; transform: translate(0, 0); }
+    .project-img {
+      width: 100%;
+      aspect-ratio: 4/3;
+      background: var(--gray);
+      margin-bottom: 1.5rem;
+      overflow: hidden;
+      position: relative;
+    }
+    .project-img-placeholder {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 5rem;
+      opacity: 0.08;
+      letter-spacing: -0.02em;
+      transition: opacity 0.3s ease;
+    }
+    .project-card:hover .project-img-placeholder { opacity: 0.12; }
+    .project-tag {
+      display: inline-block;
+      font-size: 0.6rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      border: 1px solid rgba(240,237,232,0.3);
+      padding: 0.3rem 0.6rem;
+      margin-bottom: 0.8rem;
+    }
+    .project-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2rem;
+      letter-spacing: 0.02em;
+      line-height: 1;
+      margin-bottom: 0.5rem;
+    }
+    .project-desc {
+      font-size: 0.72rem;
+      opacity: 0.55;
+      line-height: 1.7;
+    }
+    .project-arrow {
+      position: absolute;
+      top: 1.5rem;
+      right: 1.5rem;
+      font-size: 1.4rem;
+      opacity: 0;
+      transform: translate(-5px, 5px);
+      transition: all 0.3s ease;
+    }
+
+    /* ── CONTACT ── */
+    #contact {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+    }
+    .contact-left {
+      padding: 6rem 2.5rem;
+      border-right: var(--border);
+    }
+    .contact-right {
+      padding: 6rem 2.5rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 1.5rem;
+    }
+    .contact-link {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.2rem 0;
+      border-bottom: 1px solid rgba(240,237,232,0.15);
+      text-decoration: none;
+      color: var(--white);
+      font-size: 0.78rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      transition: all 0.2s ease;
+    }
+    .contact-link:hover {
+      padding-left: 1rem;
+      border-bottom-color: var(--white);
+    }
+    .contact-link span { opacity: 0.4; font-size: 1.2rem; transition: opacity 0.2s ease; }
+    .contact-link:hover span { opacity: 1; }
+    .big-email {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(1.8rem, 4vw, 3.5rem);
+      line-height: 1;
+      letter-spacing: 0.02em;
+      margin-bottom: 1.5rem;
+      word-break: break-all;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.5rem 2.5rem;
+      border-top: var(--border);
+      font-size: 0.65rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      opacity: 0.35;
+    }
+
+    /* ── SCROLL REVEAL ── */
+    .reveal {
+      opacity: 0;
+      transform: translateY(40px);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 768px) {
+      nav { padding: 1rem 1.5rem; }
+      .nav-links { gap: 1.2rem; }
+      #hero { padding: 0 1.5rem; padding-top: 5rem; }
+      #about, #contact { grid-template-columns: 1fr; }
+      .about-left { border-right: none; border-bottom: var(--border); padding: 3rem 1.5rem; }
+      .about-right { padding: 3rem 1.5rem; }
+      .work-header { padding: 2rem 1.5rem 1.5rem; }
+      .work-grid { grid-template-columns: 1fr; }
+      .project-card { border-right: none; min-height: auto; }
+      .project-card:nth-child(3n) { border-right: none; }
+      .contact-left { border-right: none; border-bottom: var(--border); padding: 3rem 1.5rem; }
+      .contact-right { padding: 3rem 1.5rem; }
+      footer { flex-direction: column; gap: 0.5rem; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- LOADER -->
+  <div id="loader"><span class="loader-text">LOADING</span></div>
+
+  <!-- NAV -->
+  <nav>
+    <a class="nav-logo" href="#">PP.</a>
+    <ul class="nav-links">
+      <li><a href="#about">About</a></li>
+      <li><a href="#work">Work</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+  </nav>
+
+  <!-- HERO -->
+  <section id="hero">
+    <div class="hero-main">
+      <p class="hero-eyebrow">GRAFIK — Based in Slovakia</p>
+      <h1>
+        PPRHACEK<br/>
+        <span class="outline">EVERYTHING IS ART</span>
+      </h1>
+      <p class="hero-sub">
+        Visual identity, branding &amp; digital design.<br/>
+        Crafting bold, memorable experiences<br/>
+        that cut through the noise.
+      </p>
+    </div>
+    <div class="hero-bottom">
+      <div class="hero-available">
+        <span class="dot"></span>
+        Available for projects
+      </div>
+      <div class="scroll-hint">↓ Scroll</div>
+    </div>
+    <div class="hero-number">01</div>
+  </section>
+
+  <!-- MARQUEE -->
+  <div class="marquee-wrap">
+    <div class="marquee-track">
+      <span>GRAPHIC DESIGN</span><span>—</span>
+      <span>BRANDING</span><span>—</span>
+      <span>VISUAL IDENTITY</span><span>—</span>
+      <span>TYPOGRAPHY</span><span>—</span>
+      <span>PRINT</span><span>—</span>
+      <span>MOTION</span><span>—</span>
+      <span>ART DIRECTION</span><span>—</span>
+      <span>GRAPHIC DESIGN</span><span>—</span>
+      <span>BRANDING</span><span>—</span>
+      <span>VISUAL IDENTITY</span><span>—</span>
+      <span>TYPOGRAPHY</span><span>—</span>
+      <span>PRINT</span><span>—</span>
+      <span>MOTION</span><span>—</span>
+      <span>ART DIRECTION</span><span>—</span>
+    </div>
+  </div>
+
+  <!-- ABOUT -->
+  <section id="about">
+    <div class="about-left reveal">
+      <div class="section-label">About</div>
+      <h2>Design<br/>With<br/>Purpose</h2>
+      <p class="about-text">
+        <!-- UPRAV TENTO TEXT -->
+        ART.
+      </p>
+      <div class="skills-grid">
+        <div class="skill-tag">Branding</div>
+        <div class="skill-tag">Typography</div>
+        <div class="skill-tag">Print Design</div>
+        <div class="skill-tag">Motion</div>
+        <div class="skill-tag">Illustration</div>
+        <div class="skill-tag">UI Design</div>
+      </div>
+    </div>
+    <div class="about-right reveal">
+      <div>
+        <div class="section-label">Numbers</div>
+        <div class="stats-row">
+          <div>
+            <span class="stat-num">12</span>
+            <span class="stat-label">Projects</span>
+          </div>
+          <div>
+            <span class="stat-num">3+</span>
+            <span class="stat-label">Years</span>
+          </div>
+          <div>
+            <span class="stat-num">8</span>
+            <span class="stat-label">Clients</span>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="section-label">Currently using</div>
+        <div class="skills-grid">
+          <div class="skill-tag">Figma</div>
+          <div class="skill-tag">Illustrator</div>
+          <div class="skill-tag">Photoshop</div>
+          <div class="skill-tag">InDesign</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- WORK -->
+  <section id="work">
+    <div class="work-header reveal">
+      <div>
+        <div class="section-label">Selected Work</div>
+        <h2>Projects</h2>
+      </div>
+      <span style="font-size:0.72rem;letter-spacing:0.15em;text-transform:uppercase;opacity:0.4;">2022 – 2025</span>
+    </div>
+    <div class="work-grid">
+
+      <!-- PROJEKT 1 – uprav podľa seba -->
+      <div class="project-card reveal">
+        <span class="project-arrow">↗</span>
+        <div class="project-img">
+          <div class="project-img-placeholder">01</div>
+          <!-- SEM VLOŽ OBRÁZOK: <img src="images/projekt1.jpg" style="width:100%;height:100%;object-fit:cover;" /> -->
+        </div>
+        <div>
+          <div class="project-tag">Branding</div>
+          <div class="project-title">Project Name</div>
+          <div class="project-desc">Krátky popis projektu. Čo to bolo, pre koho, čo si riešil.</div>
+        </div>
+      </div>
+
+      <!-- PROJEKT 2 -->
+      <div class="project-card reveal">
+        <span class="project-arrow">↗</span>
+        <div class="project-img">
+          <div class="project-img-placeholder">02</div>
+        </div>
+        <div>
+          <div class="project-tag">Typography</div>
+          <div class="project-title">Project Name</div>
+          <div class="project-desc">Krátky popis projektu.</div>
+        </div>
+      </div>
+
+      <!-- PROJEKT 3 -->
+      <div class="project-card reveal">
+        <span class="project-arrow">↗</span>
+        <div class="project-img">
+          <div class="project-img-placeholder">03</div>
+        </div>
+        <div>
+          <div class="project-tag">Print</div>
+          <div class="project-title">Project Name</div>
+          <div class="project-desc">Krátky popis projektu.</div>
+        </div>
+      </div>
+
+      <!-- PROJEKT 4 -->
+      <div class="project-card reveal">
+        <span class="project-arrow">↗</span>
+        <div class="project-img">
+          <div class="project-img-placeholder">04</div>
+        </div>
+        <div>
+          <div class="project-tag">Identity</div>
+          <div class="project-title">Project Name</div>
+          <div class="project-desc">Krátky popis projektu.</div>
+        </div>
+      </div>
+
+      <!-- PROJEKT 5 -->
+      <div class="project-card reveal">
+        <span class="project-arrow">↗</span>
+        <div class="project-img">
+          <div class="project-img-placeholder">05</div>
+        </div>
+        <div>
+          <div class="project-tag">Motion</div>
+          <div class="project-title">Project Name</div>
+          <div class="project-desc">Krátky popis projektu.</div>
+        </div>
+      </div>
+
+      <!-- PROJEKT 6 -->
+      <div class="project-card reveal">
+        <span class="project-arrow">↗</span>
+        <div class="project-img">
+          <div class="project-img-placeholder">06</div>
+        </div>
+        <div>
+          <div class="project-tag">Editorial</div>
+          <div class="project-title">Project Name</div>
+          <div class="project-desc">Krátky popis projektu.</div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- CONTACT -->
+  <section id="contact">
+    <div class="contact-left reveal">
+      <div class="section-label">Contact</div>
+      <h2>Let's<br/>Work<br/>Together</h2>
+      <p class="about-text">
+        Hľadáš niekoho kto ti pomôže s brandingom, identitou alebo grafickým návrhom?
+        Napíš mi — rád si vypočujem tvoj projekt.
+      </p>
+      <!-- UPRAV EMAIL -->
+      <div class="big-email">pprhacek@gmail.com</div>
+    </div>
+    <div class="contact-right reveal">
+      <div class="section-label">Social</div>
+      <!-- UPRAV LINKY -->
+      <a class="contact-link" href="https://www.behance.net/peterprhacek" target="_blank">
+        Behance <span>↗</span>
+      </a>
+      <a class="contact-link" href="https://www.instagram.com/pprhacek?igsh=MWo5Y3h0ejEwb25wMg%3D%3D&utm_source=qr" target="_blank">
+        Instagram <span>↗</span>
+      </a>
+      <a class="contact-link" href="mailto:pprhacek@gmail.com">
+        Email <span>→</span>
+      </a>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <span>© 2025 PPRHACEK</span>
+    <span>Designed &amp; Built by PPRHACEK</span>
+    <span>Slovakia</span>
+  </footer>
+
+  <script>
+    // Loader
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        document.getElementById('loader').classList.add('hidden');
+      }, 900);
+    });
+
+    // Scroll reveal
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(el => {
+        if (el.isIntersecting) {
+          el.target.classList.add('visible');
+        }
+      });
+    }, { threshold: 0.12 });
+
+    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+  </script>
+</body>
+</html>
